@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_app/colors/colors.dart';
 import 'package:task_app/components/add_button.dart';
 import 'package:task_app/components/custom_input_field.dart';
-import 'package:task_app/data/tasks_list.dart';
 import 'package:task_app/pages/home_page.dart';
 
 class AddTaskPage extends StatefulWidget {
-  const AddTaskPage({super.key});
+  const AddTaskPage({Key? key}) : super(key: key);
 
   @override
   State<AddTaskPage> createState() => _AddTaskPageState();
@@ -15,15 +15,18 @@ class AddTaskPage extends StatefulWidget {
 
 class _AddTaskPageState extends State<AddTaskPage> {
   final TextEditingController _controller = TextEditingController();
-  void handleAddTask() {
-    setState(() {
-      taskList.add({
-        "task": _controller.text.trim(),
-        "done": false,
-      });
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => const HomePage()));
-    });
+
+  Future<void> handleAddTask() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? tasks = prefs.getStringList('tasks');
+    tasks ??= [];
+    tasks.add(_controller.text.trim());
+    await prefs.setStringList('tasks', tasks);
+    Navigator.pushReplacement(
+      // ignore: use_build_context_synchronously
+      context,
+      MaterialPageRoute(builder: (context) => const HomePage()),
+    );
   }
 
   @override
@@ -37,8 +40,8 @@ class _AddTaskPageState extends State<AddTaskPage> {
     return Scaffold(
       backgroundColor: mainColor,
       appBar: AppBar(
-            leading: IconButton(
-          icon: const Icon(Icons.arrow_back,color: Colors.white,),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
           },

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:task_app/colors/colors.dart';
 import 'package:getwidget/getwidget.dart';
+import 'package:task_app/colors/colors.dart';
 import 'package:task_app/components/task.dart';
 import 'package:task_app/data/tasks_list.dart';
 import 'package:task_app/pages/add_task.dart';
 import 'package:task_app/pages/notification_page.dart';
 import 'package:task_app/pages/profile_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -16,6 +17,29 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  late SharedPreferences _prefs;
+  bool _loadedTasks = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+  _prefs = await SharedPreferences.getInstance();
+  setState(() {
+    _loadedTasks = true;
+    // Retrieve tasks from SharedPreferences
+    final List<String>? savedTasks = _prefs.getStringList('tasks');
+    if (savedTasks != null) {
+      taskList.clear(); // Clear existing tasks
+      taskList.addAll(savedTasks.map((task) => {'task': task, 'done': false}).toList());
+    }
+  });
+}
+
+
   double calculateProgress() {
     int tasksDone = taskList.where((task) => task["done"] == true).length;
     final totalTasks = taskList.length;
@@ -80,7 +104,6 @@ class _HomePageState extends State<HomePage> {
                             child: const Icon(
                               Icons.notifications_none_outlined,
                               color: Colors.white,
-                              
                             ),
                           ),
                         ),
@@ -117,7 +140,7 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       "Good  Morning",
                       style: GoogleFonts.bebasNeue(
-                        fontSize: 70.0,
+                        fontSize: 40.0,
                         fontWeight: FontWeight.bold,
                         color: secondColor,
                       ),
@@ -231,42 +254,47 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 const SizedBox(height: 20),
-                SizedBox(
-                  child: taskList.isEmpty
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 100),
-                            Center(
-                              child: Text(
-                                "No more tasks",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: taskList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final todo = taskList.reversed.toList()[index];
-                            final task = todo["task"];
-                            return Task(
-                              task: task,
-                              deleteTask: () {
-                                setState(() {
-                                  taskList.removeWhere(
-                                      (item) => item["task"] == task);
-                                  print(taskList);
-                                });
-                              },
-                            );
-                          },
-                        ),
-                ),
+                _loadedTasks
+    ? SizedBox(
+        child: taskList.isEmpty
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 100),
+                  Center(
+                    child: Text(
+                      "No more tasks",
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : ListView.builder(
+        shrinkWrap: true,
+        itemCount: taskList.length,
+        itemBuilder: (BuildContext context, int index) {
+          final todo = taskList.reversed.toList()[index];
+          final task = todo["task"];
+          return Task(
+            task: task,
+            index: index, // Pass the index of the task
+            deleteTask: (int index) { // Define the deleteTask function
+              setState(() {
+                taskList.removeAt(index); // Remove the task at the given index
+              });
+            },
+          );
+        },
+      ),
+      )
+    : Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      ),
               ],
             ),
           ),

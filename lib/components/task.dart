@@ -6,11 +6,13 @@ import 'package:task_app/colors/colors.dart';
 
 class Task extends StatefulWidget {
   final String task;
-  final VoidCallback deleteTask;
+  final int index;
+  final Function(int) deleteTask;
 
   const Task({
     Key? key,
     required this.task,
+    required this.index,
     required this.deleteTask,
   }) : super(key: key);
 
@@ -31,8 +33,7 @@ class _TaskState extends State<Task> with SingleTickerProviderStateMixin {
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         // Animation has completed, delete the task
-        // You can call a method to delete the task here
-        widget.deleteTask();
+        widget.deleteTask(widget.index);
       }
     });
   }
@@ -42,7 +43,7 @@ class _TaskState extends State<Task> with SingleTickerProviderStateMixin {
     int randomIndex = Random().nextInt(taskColors.length);
 
     return Container(
-      margin: EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: taskColors[randomIndex],
@@ -51,10 +52,10 @@ class _TaskState extends State<Task> with SingleTickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 200,
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 1.7,
             child: Text(
-              "${widget.task}",
+              widget.task,
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -73,7 +74,7 @@ class _TaskState extends State<Task> with SingleTickerProviderStateMixin {
               });
             },
             child: LottieBuilder.network(
-              "https://lottie.host/45ea4be6-7479-4910-b9d4-fcfdf31307d4/SZ8ihXFO6K.json", // Replace with your local asset file path
+              "https://lottie.host/45ea4be6-7479-4910-b9d4-fcfdf31307d4/SZ8ihXFO6K.json",
               controller: _animationController,
               width: 90,
               onLoaded: (composition) {

@@ -38,6 +38,7 @@ dependencies:
   google_fonts: ^6.1.0
   getwidget: ^4.0.0
   lottie: ^2.6.0
+  shared_preferences:
 
 dev_dependencies:
   flutter_test:
